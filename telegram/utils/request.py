@@ -182,6 +182,10 @@ class Request(object):
         if 200 <= resp.status <= 299:
             # 200-299 range are HTTP success statuses
             return resp.data
+        try:
+            message = self._parse(resp.data)
+        except ValueError:
+            raise NetworkError('Unknown HTTPError {0}'.format(resp.status))
 
         if resp.status in (401, 403):
             raise Unauthorized(message)
@@ -195,11 +199,6 @@ class Request(object):
             raise NetworkError('Bad Gateway')
         else:
             raise NetworkError('{0} ({1})'.format(message, resp.status))
-
-        try:
-            message = self._parse(resp.data)
-        except ValueError:
-            raise NetworkError('Unknown HTTPError {0}'.format(resp.status))
 
     def get(self, url, timeout=None):
         """Request an URL.
